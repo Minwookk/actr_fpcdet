@@ -37,7 +37,7 @@ class PyramidFeat2D(nn.Module):
     def get_output_feature_dim(self):
         return self.out_channels
 
-    def forward(self, images):
+    def forward(self, images, data_dict = None):
         """
         Predicts depths and creates image depth feature volume using depth distributions
         Args:
@@ -50,9 +50,12 @@ class PyramidFeat2D(nn.Module):
         batch_dict = {}
         ifn_result = self.ifn(images)
 
+        data_dict['img_feats'] = []
         for _idx, _layer in enumerate(self.model_cfg.args['feat_extract_layer']):
             image_features = ifn_result[_layer]
             # Channel reduce
+            if data_dict is not None:
+                data_dict['img_feats'].append(image_features)
             if self.reduce_blocks[_idx] is not None and self.fusion_method == 'MVX':
                 image_features = self.reduce_blocks[_idx](image_features)
             if 'MVX+' in self.fusion_method and _idx == 0 and self.reduce_blocks[_idx] is not None:
